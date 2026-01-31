@@ -1,5 +1,7 @@
 package eu.api.service.impl;
 
+import eu.api.domain.AuditAction;
+import eu.api.domain.AuditResourceType;
 import eu.api.domain.BloodType;
 import eu.api.dto.request.UpdateHealthRequest;
 import eu.api.dto.response.HealthInfoResponse;
@@ -8,6 +10,7 @@ import eu.api.crypto.CryptoService;
 import eu.api.repository.AllergyRepository;
 import eu.api.repository.HealthInfoRepository;
 import eu.api.repository.MedicationRepository;
+import eu.api.service.AuditService;
 import eu.api.service.HealthInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
     private final AllergyRepository allergyRepository;
     private final MedicationRepository medicationRepository;
     private final CryptoService cryptoService;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -33,13 +37,19 @@ public class HealthInfoServiceImpl implements HealthInfoService {
         int allergyCount = allergyRepository.findByUserIdOrderByCreatedAtAsc(userId).size();
         int medicationCount = medicationRepository.findByUserIdOrderByCreatedAtAsc(userId).size();
         return healthInfoRepository.findByUserId(userId)
-                .map(entity -> toResponse(entity, allergyCount, medicationCount, includeNotes))
-                .orElse(HealthInfoResponse.builder()
-                        .bloodType(DEFAULT_BLOOD_TYPE)
-                        .allergyCount(allergyCount)
-                        .medicationCount(medicationCount)
-                        .medicalNotes(null)
-                        .build());
+                .map(entity -> {
+                    auditService.record(userId, AuditResourceType.HEALTH_INFO, AuditAction.READ, entity.getId());
+                    return toResponse(entity, allergyCount, medicationCount, includeNotes);
+                })
+                .orElseGet(() -> {
+                    auditService.record(userId, AuditResourceType.HEALTH_INFO, AuditAction.READ, null);
+                    return HealthInfoResponse.builder()
+                            .bloodType(DEFAULT_BLOOD_TYPE)
+                            .allergyCount(allergyCount)
+                            .medicationCount(medicationCount)
+                            .medicalNotes(null)
+                            .build();
+                });
     }
 
     @Override
@@ -55,6 +65,7 @@ public class HealthInfoServiceImpl implements HealthInfoService {
             entity.setMedicalNotes(plain == null ? null : cryptoService.encrypt(plain));
         }
         entity = healthInfoRepository.save(entity);
+        auditService.record(userId, AuditResourceType.HEALTH_INFO, AuditAction.UPDATE, entity.getId());
         int allergyCount = allergyRepository.findByUserIdOrderByCreatedAtAsc(userId).size();
         int medicationCount = medicationRepository.findByUserIdOrderByCreatedAtAsc(userId).size();
         return toResponse(entity, allergyCount, medicationCount, true);

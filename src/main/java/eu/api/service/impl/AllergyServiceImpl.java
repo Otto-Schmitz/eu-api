@@ -1,6 +1,8 @@
 package eu.api.service.impl;
 
 import eu.api.domain.AllergySeverity;
+import eu.api.domain.AuditAction;
+import eu.api.domain.AuditResourceType;
 import eu.api.dto.request.CreateAllergyRequest;
 import eu.api.dto.request.UpdateAllergyRequest;
 import eu.api.dto.response.AllergyListItemResponse;
@@ -10,6 +12,7 @@ import eu.api.exception.NotFoundException;
 import eu.api.crypto.CryptoService;
 import eu.api.repository.AllergyRepository;
 import eu.api.service.AllergyService;
+import eu.api.service.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +28,18 @@ public class AllergyServiceImpl implements AllergyService {
 
     private final AllergyRepository allergyRepository;
     private final CryptoService cryptoService;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
     public List<AllergyListItemResponse> list(UUID userId, boolean includeNotes) {
-        return allergyRepository.findByUserIdOrderByCreatedAtAsc(userId).stream()
+        List<AllergyListItemResponse> list = allergyRepository.findByUserIdOrderByCreatedAtAsc(userId).stream()
                 .map(e -> toItemResponse(e, includeNotes))
                 .toList();
+        if (!list.isEmpty()) {
+            auditService.record(userId, AuditResourceType.ALLERGY, AuditAction.READ, null);
+        }
+        return list;
     }
 
     @Override
@@ -46,6 +54,7 @@ public class AllergyServiceImpl implements AllergyService {
                 .notes(notesEncrypted)
                 .build();
         entity = allergyRepository.save(entity);
+        auditService.record(userId, AuditResourceType.ALLERGY, AuditAction.CREATE, entity.getId());
         return toItemResponse(entity, true);
     }
 
@@ -67,6 +76,7 @@ public class AllergyServiceImpl implements AllergyService {
             entity.setNotes(encryptNotes(request.getNotes()));
         }
         entity = allergyRepository.save(entity);
+        auditService.record(userId, AuditResourceType.ALLERGY, AuditAction.UPDATE, allergyId);
         return toItemResponse(entity, true);
     }
 
@@ -80,6 +90,7 @@ public class AllergyServiceImpl implements AllergyService {
         }
         entity.setDeletedAt(Instant.now());
         allergyRepository.save(entity);
+        auditService.record(userId, AuditResourceType.ALLERGY, AuditAction.DELETE, allergyId);
     }
 
     private AllergyListItemResponse toItemResponse(AllergyEntity entity, boolean includeNotes) {

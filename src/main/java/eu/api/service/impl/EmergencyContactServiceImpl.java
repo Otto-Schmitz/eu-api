@@ -1,5 +1,7 @@
 package eu.api.service.impl;
 
+import eu.api.domain.AuditAction;
+import eu.api.domain.AuditResourceType;
 import eu.api.dto.request.CreateEmergencyContactRequest;
 import eu.api.dto.request.UpdateEmergencyContactRequest;
 import eu.api.dto.response.EmergencyContactResponse;
@@ -7,6 +9,7 @@ import eu.api.entity.EmergencyContactEntity;
 import eu.api.exception.ForbiddenException;
 import eu.api.exception.NotFoundException;
 import eu.api.repository.EmergencyContactRepository;
+import eu.api.service.AuditService;
 import eu.api.service.EmergencyContactService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,10 +26,12 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     private static final int DEFAULT_PRIORITY = 0;
 
     private final EmergencyContactRepository emergencyContactRepository;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
     public List<EmergencyContactResponse> list(UUID userId) {
+        auditService.record(userId, AuditResourceType.EMERGENCY_CONTACT, AuditAction.READ, null);
         return emergencyContactRepository.findByUserIdOrderByPriorityAsc(userId).stream()
                 .map(this::toResponse)
                 .toList();
@@ -44,6 +49,7 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
                 .priority(priority)
                 .build();
         entity = emergencyContactRepository.save(entity);
+        auditService.record(userId, AuditResourceType.EMERGENCY_CONTACT, AuditAction.CREATE, entity.getId());
         return toResponse(entity);
     }
 
@@ -81,6 +87,7 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         }
         entity.setDeletedAt(Instant.now());
         emergencyContactRepository.save(entity);
+        auditService.record(userId, AuditResourceType.EMERGENCY_CONTACT, AuditAction.DELETE, contactId);
     }
 
     private EmergencyContactResponse toResponse(EmergencyContactEntity entity) {

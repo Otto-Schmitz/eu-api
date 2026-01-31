@@ -1,5 +1,7 @@
 package eu.api.service.impl;
 
+import eu.api.domain.AuditAction;
+import eu.api.domain.AuditResourceType;
 import eu.api.dto.request.CreateMedicationRequest;
 import eu.api.dto.request.UpdateMedicationRequest;
 import eu.api.dto.response.MedicationListItemResponse;
@@ -8,6 +10,7 @@ import eu.api.exception.ForbiddenException;
 import eu.api.exception.NotFoundException;
 import eu.api.crypto.CryptoService;
 import eu.api.repository.MedicationRepository;
+import eu.api.service.AuditService;
 import eu.api.service.MedicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,10 +27,12 @@ public class MedicationServiceImpl implements MedicationService {
 
     private final MedicationRepository medicationRepository;
     private final CryptoService cryptoService;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
     public List<MedicationListItemResponse> list(UUID userId, boolean includeNotes) {
+        auditService.record(userId, AuditResourceType.MEDICATION, AuditAction.READ, null);
         return medicationRepository.findByUserIdOrderByCreatedAtAsc(userId).stream()
                 .map(e -> toItemResponse(e, includeNotes))
                 .toList();
@@ -69,6 +74,7 @@ public class MedicationServiceImpl implements MedicationService {
             entity.setNotes(encryptNotes(request.getNotes()));
         }
         entity = medicationRepository.save(entity);
+        auditService.record(userId, AuditResourceType.MEDICATION, AuditAction.UPDATE, medicationId);
         return toItemResponse(entity, true);
     }
 
@@ -82,6 +88,7 @@ public class MedicationServiceImpl implements MedicationService {
         }
         entity.setDeletedAt(Instant.now());
         medicationRepository.save(entity);
+        auditService.record(userId, AuditResourceType.MEDICATION, AuditAction.DELETE, medicationId);
     }
 
     private MedicationListItemResponse toItemResponse(MedicationEntity entity, boolean includeNotes) {
