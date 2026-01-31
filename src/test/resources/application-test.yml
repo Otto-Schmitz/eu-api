@@ -18,6 +18,9 @@ jwt:
   access-ttl-minutes: 15
   refresh-ttl-days: 30
 
+crypto:
+  master-key-base64: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
 logging:
   level:
     eu.api: DEBUG
