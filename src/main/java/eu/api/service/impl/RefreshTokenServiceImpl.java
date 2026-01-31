@@ -3,6 +3,7 @@ package eu.api.service.impl;
 import eu.api.entity.RefreshTokenEntity;
 import eu.api.exception.ApiException;
 import eu.api.repository.RefreshTokenRepository;
+import eu.api.service.RefreshTokenResult;
 import eu.api.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +49,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public String validateAndRotate(String token) {
+    public RefreshTokenResult validateAndRotate(String token) {
         String tokenHash = hashToken(token);
         RefreshTokenEntity entity = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new ApiException("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token", HttpStatus.UNAUTHORIZED));
@@ -58,7 +59,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
         UUID userId = entity.getUserId();
         softDelete(entity);
-        return create(userId);
+        String newToken = create(userId);
+        return new RefreshTokenResult(userId, newToken);
     }
 
     private String generateOpaqueToken() {
@@ -76,6 +78,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 not available", e);
         }
+    }
+
+    @Override
+    @Transactional
+    public void invalidate(String token) {
+        String tokenHash = hashToken(token);
+        refreshTokenRepository.findByTokenHash(tokenHash).ifPresent(this::softDelete);
     }
 
     private void softDelete(RefreshTokenEntity entity) {

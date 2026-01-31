@@ -16,8 +16,13 @@ public interface RefreshTokenService {
 
     /**
      * Validates the refresh token, invalidates it, and issues a new one (rotation).
-     * Returns the new opaque token string.
+     * Returns the user id and the new opaque token string.
      * @throws eu.api.exception.ApiException if token is invalid or expired
      */
-    String validateAndRotate(String token);
+    RefreshTokenResult validateAndRotate(String token);
+
+    /**
+     * Invalidates the refresh token (e.g. on logout). Idempotent: no error if token already invalid.
+     */
+    void invalidate(String token);
 }
