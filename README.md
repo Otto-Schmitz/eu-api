@@ -4,7 +4,7 @@ Personal wallet API — health, emergency contacts, addresses. Layered backend (
 
 ## Stack
 
-- Java 17, Spring Boot 3.2
+- Java 21, Spring Boot 3.2
 - PostgreSQL, Spring Data JPA
 - JWT (access + refresh), AES-GCM for sensitive fields
 - Maven
