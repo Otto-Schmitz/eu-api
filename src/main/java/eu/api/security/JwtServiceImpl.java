@@ -65,7 +65,7 @@ public class JwtServiceImpl implements JwtService {
             log.debug("Access token expired");
             throw e;
         } catch (JwtException e) {
-            log.debug("Invalid access token: {}", e.getMessage());
+            log.debug("Invalid access token");
             throw e;
         }
     }

@@ -84,7 +84,7 @@ public class CryptoServiceImpl implements CryptoService {
             byte[] plaintext = cipher.doFinal(encrypted);
             return new String(plaintext, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.debug("Decryption failed (wrong key or tampered data): {}", e.getMessage());
+            log.debug("Decryption failed (wrong key or tampered data)");
             return null;
         }
     }

@@ -21,6 +21,14 @@ jwt:
 crypto:
   master-key-base64: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 
+rate-limit:
+  auth:
+    requests-per-minute: 100
+    burst: 50
+
+refresh-token-cleanup:
+  enabled: false
+
 logging:
   level:
     eu.api: DEBUG

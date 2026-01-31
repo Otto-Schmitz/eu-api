@@ -34,7 +34,8 @@ public class AuditServiceImpl implements AuditService {
                     .build();
             auditEventRepository.save(entity);
         } catch (Exception e) {
-            log.warn("Failed to record audit event userId={} resourceType={} action={}", userId, resourceType, action, e);
+            log.warn("Failed to record audit event userId={} resourceType={} action={} error={}",
+                    userId, resourceType, action, e.getClass().getSimpleName());
         }
     }
 }
