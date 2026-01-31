@@ -8,7 +8,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "refresh_tokens", indexes = {@Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")})
+@Table(name = "refresh_tokens", indexes = {
+        @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id"),
+        @Index(name = "idx_refresh_tokens_token_hash", columnList = "token_hash")
+})
 @Where(clause = "deleted_at IS NULL")
 @Getter
 @Setter
