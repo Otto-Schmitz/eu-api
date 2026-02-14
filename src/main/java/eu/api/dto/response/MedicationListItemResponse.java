@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -18,4 +19,7 @@ public class MedicationListItemResponse {
     private String dosage;
     private String frequency;
     private String notes;
+    private Boolean active;
+    private LocalDate startedAt;
+    private LocalDate stoppedAt;
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,6 +49,9 @@ public class MedicationServiceImpl implements MedicationService {
                 .dosage(trimOrNull(request.getDosage()))
                 .frequency(trimOrNull(request.getFrequency()))
                 .notes(notesEncrypted)
+                .active(request.getActive() != null ? request.getActive() : true)
+                .startedAt(parseDate(request.getStartedAt()))
+                .stoppedAt(parseDate(request.getStoppedAt()))
                 .build();
         entity = medicationRepository.save(entity);
         return toItemResponse(entity, true);
@@ -72,6 +76,15 @@ public class MedicationServiceImpl implements MedicationService {
         }
         if (request.getNotes() != null) {
             entity.setNotes(encryptNotes(request.getNotes()));
+        }
+        if (request.getActive() != null) {
+            entity.setActive(request.getActive());
+        }
+        if (request.getStartedAt() != null) {
+            entity.setStartedAt(parseDate(request.getStartedAt()));
+        }
+        if (request.getStoppedAt() != null) {
+            entity.setStoppedAt(parseDate(request.getStoppedAt()));
         }
         entity = medicationRepository.save(entity);
         auditService.record(userId, AuditResourceType.MEDICATION, AuditAction.UPDATE, medicationId);
@@ -99,6 +112,9 @@ public class MedicationServiceImpl implements MedicationService {
                 .dosage(entity.getDosage())
                 .frequency(entity.getFrequency())
                 .notes(notes)
+                .active(entity.getActive())
+                .startedAt(entity.getStartedAt())
+                .stoppedAt(entity.getStoppedAt())
                 .build();
     }
 
@@ -119,5 +135,14 @@ public class MedicationServiceImpl implements MedicationService {
     private String decryptNotes(String encrypted) {
         return Optional.ofNullable(encrypted).filter(str -> !str.isBlank())
                 .map(cryptoService::decrypt).orElse(null);
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+        try {
+            return LocalDate.parse(dateStr.trim());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

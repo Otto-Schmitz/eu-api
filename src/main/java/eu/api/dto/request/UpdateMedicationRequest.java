@@ -23,4 +23,8 @@ public class UpdateMedicationRequest {
 
     @Size(max = 2048)
     private String notes;
+
+    private Boolean active;
+    private String startedAt;
+    private String stoppedAt;
 }

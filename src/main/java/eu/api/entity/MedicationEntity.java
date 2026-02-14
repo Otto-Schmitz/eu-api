@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -30,4 +31,14 @@ public class MedicationEntity extends BaseEntity {
 
     @Column(length = 2048)
     private String notes;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    @Column(name = "started_at")
+    private LocalDate startedAt;
+
+    @Column(name = "stopped_at")
+    private LocalDate stoppedAt;
 }
