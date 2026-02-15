@@ -65,6 +65,17 @@ Personal wallet API — health info, allergies, medications, emergency contacts,
    API: **http://localhost:8080**  
    Postgres: **localhost:5432** (user `eu`, password from `POSTGRES_PASSWORD` or default `eu`).
 
+### Deploy (VM com domínio api.secry.com.br)
+
+1. Na VM, o script remove os containers do projeto antigo (Secry) e sobe esta API + Postgres + Nginx.
+2. Crie `.env` a partir de `.env.example` e defina `JWT_SECRET` e `CRYPTO_MASTER_KEY` (produção).
+3. Execute a partir da pasta **backend/**:
+   ```bash
+   ./deploy.sh
+   ```
+4. Variáveis opcionais: `DEPLOY_SERVER=user@host` e `DEPLOY_REMOTE_DIR=~/secry`.
+5. Aponte o DNS de **api.secry.com.br** para o IP da VM. Para HTTPS, use certbot e descomente o bloco SSL em `nginx-eu.conf`.
+
 ---
 
 ## Environment variables
